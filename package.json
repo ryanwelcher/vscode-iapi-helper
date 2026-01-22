@@ -2,7 +2,7 @@
   "name": "wordpress-interactivity-api-helper",
   "displayName": "WordPress Interactivity API Helper",
   "description": "Intelligent autocomplete for WordPress Interactivity API directives with duplicate detection and context-aware suggestions",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "ryanwelcher",
   "license": "GPL-3.0",
   "icon": "icon.png",
