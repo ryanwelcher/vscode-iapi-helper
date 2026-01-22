@@ -56,13 +56,19 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	// Scan on activation if there's an active editor
-	if (vscode.window.activeTextEditor) {
-		const document = vscode.window.activeTextEditor.document;
-		if (document.languageId === 'php' || document.languageId === 'html') {
-			console.log('[WP Interactivity API] Initial scan for:', document.uri.fsPath);
-			workspaceScanner.scanActiveDirectory();
+	const initialScan = async () => {
+		if (vscode.window.activeTextEditor) {
+			const document = vscode.window.activeTextEditor.document;
+			if (document.languageId === 'php' || document.languageId === 'html') {
+				console.log('[WP Interactivity API] Initial scan for:', document.uri.fsPath);
+				await workspaceScanner.scanActiveDirectory();
+				// Validate after initial scan completes
+				duplicateValidator.validateDocument(document);
+				namespaceValidator.validateDocument(document);
+			}
 		}
-	}
+	};
+	initialScan();
 
 	// Validate documents for duplicate directives and namespaces on change (debounced)
 	context.subscriptions.push(
@@ -77,25 +83,19 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Validate documents when they are opened or become visible
 	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor(editor => {
+		vscode.window.onDidChangeActiveTextEditor(async (editor) => {
 			if (editor) {
 				const document = editor.document;
 				if (document.languageId === 'php' || document.languageId === 'html') {
+					// Scan the new directory first
+					await workspaceScanner.scanActiveDirectory();
+					// Then validate
 					duplicateValidator.validateDocument(document);
 					namespaceValidator.validateDocument(document);
 				}
 			}
 		})
 	);
-
-	// Validate the active document on activation
-	if (vscode.window.activeTextEditor) {
-		const document = vscode.window.activeTextEditor.document;
-		if (document.languageId === 'php' || document.languageId === 'html') {
-			duplicateValidator.validateDocument(document);
-			namespaceValidator.validateDocument(document);
-		}
-	}
 
 	// Register refresh command
 	context.subscriptions.push(
