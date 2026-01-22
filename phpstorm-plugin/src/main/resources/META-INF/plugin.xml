@@ -1,0 +1,39 @@
+<idea-plugin>
+    <id>com.ryanwelcher.wordpress-interactivity-api-helper</id>
+    <name>WordPress Interactivity API Helper</name>
+    <vendor email="ryan@ryanwelcher.com" url="https://github.com/ryanwelcher">Ryan Welcher</vendor>
+
+    <description><![CDATA[
+    Intelligent autocomplete and validation for WordPress Interactivity API directives.
+    <ul>
+        <li>Directive Autocomplete: data-wp-* directives</li>
+        <li>Value Suggestions: state, actions, and callbacks</li>
+        <li>Duplicate Detection: Warnings for improperly duplicated directives</li>
+        <li>Namespace Validation: Warnings for undefined store namespaces</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.jetbrains.php</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.ultimate</depends> <!-- For JS support in PHPStorm if needed, or just JavaScript -->
+    <depends>JavaScript</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Completion -->
+        <completion.contributor language="HTML" implementationClass="com.ryanwelcher.wpinteractivity.completion.HtmlDirectiveCompletionContributor"/>
+        <completion.contributor language="PHP" implementationClass="com.ryanwelcher.wpinteractivity.completion.PhpDirectiveCompletionContributor"/>
+
+        <!-- Inspections -->
+        <localInspection language="HTML" displayName="Duplicate Interactivity Directive" groupName="WordPress Interactivity API"
+                         enabledByDefault="true" level="WARNING" implementationClass="com.ryanwelcher.wpinteractivity.inspections.DuplicateDirectiveInspection"/>
+
+        <!-- Project Service for Store Registry -->
+        <projectService serviceImplementation="com.ryanwelcher.wpinteractivity.services.StoreService"/>
+    </extensions>
+
+    <projectListeners>
+        <listener class="com.ryanwelcher.wpinteractivity.listeners.StoreFileListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </projectListeners>
+</idea-plugin>

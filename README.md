@@ -1,17 +1,32 @@
 # WordPress Interactivity API Helper
 
-Intelligent autocomplete and validation for WordPress Interactivity API directives in VSCode.
+Intelligent autocomplete and validation for WordPress Interactivity API directives in VSCode and PHPStorm.
 
 ## Features
 
 - 🎯 **Directive Autocomplete**: Get intelligent suggestions for all `data-wp-*` directives as you type
 - 🔍 **Context-Aware Value Suggestions**: Autocomplete for state, actions, and callbacks based on detected stores
 - ⚠️ **Duplicate Detection**: Warnings for improperly duplicated directives on the same element
-- 🚨 **Namespace Validation**: Warnings when using undefined store namespaces with typo suggestions
+- 🚨 **Namespace Validation**: Warnings when using undefined store namespaces with typo suggestions (VSCode)
 - 📁 **Directory-Scoped Store Detection**: Automatically discovers store definitions from PHP and JavaScript/TypeScript files
-- 📝 **Inline Context Parsing**: Suggests properties from inline `data-wp-context` attributes
+- 📝 **Inline Context Parsing**: Suggests properties from inline `data-wp-context` attributes (VSCode)
 - 🔄 **Multiline Attribute Support**: Autocomplete works across multiline HTML attributes
-- 💾 **Smart Caching**: File watcher automatically updates stores when files change
+- 💾 **Smart Caching**: Automatically updates stores when files change
+
+## Installation
+
+### VS Code
+
+Search for "WordPress Interactivity API Helper" in the VS Code Marketplace or install it via the Command Palette:
+`ext install ryanwelcher.wordpress-interactivity-api-helper`
+
+### PHPStorm
+
+The PHPStorm plugin is currently in development. To use it:
+1. Clone this repository
+2. Navigate to `phpstorm-plugin`
+3. Run `./gradlew buildPlugin`
+4. In PHPStorm, go to `Settings > Plugins > ⚙️ > Install Plugin from Disk...` and select the ZIP file from `build/distributions/`.
 
 ## Usage
 
