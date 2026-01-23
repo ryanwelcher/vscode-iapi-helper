@@ -56,6 +56,18 @@ export class ValueCompletionProvider implements vscode.CompletionItemProvider {
 		// Special handling for context. - check for inline data-wp-context first
 		if (valueInfo.type === 'context') {
 			console.log('[WP Interactivity API] Context type detected, looking for inline context...');
+
+			// First, try to find context from PHP function calls
+			const docText = document.getText();
+			const offset = document.offsetAt(position);
+			const phpContext = this.contextParser.parseContextFromDocument(docText, offset);
+
+			if (phpContext && phpContext.size > 0) {
+				console.log('[WP Interactivity API] Context from PHP function found, properties:', phpContext.size);
+				return this.getContextSuggestions(phpContext, valueInfo.prefix, 'wp_interactivity_data_wp_context()');
+			}
+
+			// Fallback to inline HTML attributes
 			const inlineContext = HtmlParser.findNearestContextAttribute(document, position);
 			console.log('[WP Interactivity API] Inline context found:', inlineContext);
 			if (inlineContext) {
