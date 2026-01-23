@@ -65,7 +65,7 @@ DuplicateValidator + NamespaceValidator provide warnings
 #### Parsers (`src/parsers/`)
 - **PhpStoreParser**: Extracts stores from `wp_interactivity_state('namespace', array(...))` calls
 - **JsStoreParser**: Extracts stores from `store('namespace', { state, actions, callbacks })` calls
-- **ContextParser**: Parses inline `data-wp-context='{"prop": value}'` attributes
+- **ContextParser**: Parses context from both inline `data-wp-context='{"prop": value}'` attributes AND `wp_interactivity_data_wp_context()` PHP function calls with variable tracking
 - **StoreRegistry**: Central cache for all detected stores (HashMap-based)
 
 #### Validators (`src/validators/`)
@@ -80,6 +80,13 @@ DuplicateValidator + NamespaceValidator provide warnings
 #### Constants (`src/constants/`)
 - **directives.ts**: Source of truth for all 21 directives with metadata (category, duplication rules, documentation, snippets)
 
+#### Examples (`examples/`)
+- **context-inline.html**: Test cases for inline `data-wp-context` attribute parsing
+- **context-php-function.php**: Test cases for `wp_interactivity_data_wp_context()` PHP function parsing
+- **duplicate-detection.html**: Test cases for duplicate directive validation
+- **store-definition.js**: Example JavaScript store with comprehensive state/actions/callbacks
+- **README.md**: Detailed testing documentation and usage instructions
+
 ## Critical Implementation Details
 
 ### Store Detection Rules
@@ -93,9 +100,14 @@ DuplicateValidator + NamespaceValidator provide warnings
 - Looks for `wp_interactivity_state('namespace', array(...))` function calls
 - Handles both array syntax: `array(...)` and `[...]`
 
-**Inline Context:**
-- Parses `data-wp-context='{"prop": value}'` attributes for context property suggestions
-- Must be valid JSON (tolerant parsing during typing)
+**Context Detection:**
+- **Method 1: PHP Function** - Parses `wp_interactivity_data_wp_context($context)` calls
+  - Tracks variable assignments through the PHP AST
+  - Handles `array_merge()` function calls
+  - Example: `$context = array('slides' => array(), 'currentSlide' => 0);`
+- **Method 2: Inline Attributes** - Parses `data-wp-context='{"prop": value}'` attributes
+  - Must be valid JSON (tolerant parsing during typing)
+  - Fallback when no PHP function is found
 
 ### Provider Behavior
 
@@ -215,6 +227,12 @@ All logs appear in **Debug Console** (not the Extension Development Host console
 - Check Debug Console for parsing errors
 - Verify syntax matches detection patterns above
 
+**Context properties not appearing:**
+- For PHP function: Ensure `wp_interactivity_data_wp_context($var)` is called and `$var` is assigned in the same file
+- For inline attributes: Check JSON syntax in `data-wp-context='{"prop": value}'`
+- PHP context parsing searches for variable assignments (e.g., `$context = array(...)`)
+- Supports `array_merge()` calls in variable definitions
+
 **Duplicate warnings incorrect:**
 - Review duplication rules in `src/constants/directives.ts`
 - Check `DuplicateValidator` logic
@@ -222,40 +240,45 @@ All logs appear in **Debug Console** (not the Extension Development Host console
 
 ## Testing
 
-### Manual Testing Workflow
+### Example Files
 
-1. Create test directory with these files:
+The `examples/` directory contains comprehensive test files:
+- `context-inline.html` - Tests inline `data-wp-context` attribute parsing
+- `context-php-function.php` - Tests `wp_interactivity_data_wp_context()` function parsing
+- `duplicate-detection.html` - Tests duplicate directive validation
+- `store-definition.js` - Example store with state, actions, and callbacks
+- `README.md` - Detailed testing instructions for each file
 
-**view.js:**
-```javascript
-import { store } from '@wordpress/interactivity';
+See `examples/README.md` for step-by-step testing workflows.
 
-store('myPlugin', {
-    state: {
-        counter: 0,
-        isOpen: false
-    },
-    actions: {
-        toggle: () => {}
-    }
-});
+### Quick Manual Test
+
+1. Press F5 to launch Extension Development Host
+2. Open any file from `examples/` directory
+3. Follow the inline comments for testing locations
+4. Test autocomplete suggestions match expected properties
+
+### Testing New Context Parsing (Issue #4)
+
+**PHP Function Method:**
+```php
+<?php
+$context = array('slides' => array(), 'currentSlide' => 0);
+echo wp_interactivity_data_wp_context($context);
+?>
+<button data-wp-bind--aria-pressed="context.">
+    <!-- Should suggest: slides, currentSlide -->
+</button>
 ```
 
-**template.php:**
-```php
-<div data-wp-interactive="myPlugin">
-    <button data-wp-on--click="actions.toggle">
-        <span data-wp-text="state.counter"></span>
-    </button>
+**Inline Attribute Method:**
+```html
+<div data-wp-context='{"postId": 123, "isActive": true}'>
+    <span data-wp-text="context.">
+        <!-- Should suggest: postId, isActive -->
+    </span>
 </div>
 ```
-
-2. Press F5 to launch Extension Development Host
-3. Open `template.php`
-4. Test:
-   - Type `data-` → should suggest directives
-   - Type `state.` → should suggest `counter`, `isOpen`
-   - Type `actions.` → should suggest `toggle`
 
 ### Test Commands
 
@@ -303,6 +326,17 @@ All settings prefix: `wpInteractivityAPI.*`
 - Files: camelCase (`directiveCompletionProvider.ts`)
 - Interfaces: PascalCase (`DirectiveInfo`, `StoreDefinition`)
 - Constants: UPPER_SNAKE_CASE or PascalCase for exports
+
+### Directory Structure
+
+```
+src/               - Source code
+examples/          - Test files and examples with comprehensive documentation
+dist/              - Compiled output (gitignored)
+test-workspace/    - Temporary test files during development (gitignored)
+```
+
+**Note:** Use `examples/` for permanent test cases and documentation. Use `test-workspace/` for temporary testing during development (automatically gitignored).
 
 ## Build System
 
