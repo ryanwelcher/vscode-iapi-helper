@@ -172,29 +172,44 @@ export class JsStoreParser {
 		state: Map<string, PropertyInfo>
 	): void {
 		for (const prop of node.properties) {
-			if (prop.type !== 'ObjectProperty' && prop.type !== 'ObjectMethod') {
-				continue;
+			// Handle ObjectProperty (regular properties)
+			if (prop.type === 'ObjectProperty') {
+				const key = this.getPropertyKey(prop);
+				if (!key) {
+					continue;
+				}
+
+				const propertyInfo: PropertyInfo = {
+					name: key,
+					type: this.inferType(prop.value),
+					sourceLine: prop.loc?.start?.line
+				};
+
+				// Check if value is an object
+				if (prop.value && prop.value.type === 'ObjectExpression') {
+					propertyInfo.isObject = true;
+					propertyInfo.properties = new Map();
+					this.extractStateProperties(prop.value, propertyInfo.properties);
+				}
+
+				state.set(key, propertyInfo);
 			}
+			// Handle ObjectMethod (getters only - regular methods don't belong in state)
+			else if (prop.type === 'ObjectMethod' && prop.kind === 'get') {
+				const key = this.getPropertyKey(prop);
+				if (!key) {
+					continue;
+				}
 
-			const key = this.getPropertyKey(prop);
-			if (!key) {
-				continue;
+				const propertyInfo: PropertyInfo = {
+					name: key,
+					type: 'computed', // Mark as computed property
+					sourceLine: prop.loc?.start?.line
+				};
+
+				state.set(key, propertyInfo);
 			}
-
-			const propertyInfo: PropertyInfo = {
-				name: key,
-				type: this.inferType(prop.value),
-				sourceLine: prop.loc?.start?.line
-			};
-
-			// Check if value is an object
-			if (prop.value && prop.value.type === 'ObjectExpression') {
-				propertyInfo.isObject = true;
-				propertyInfo.properties = new Map();
-				this.extractStateProperties(prop.value, propertyInfo.properties);
-			}
-
-			state.set(key, propertyInfo);
+			// Skip other ObjectMethod types (regular methods, setters)
 		}
 	}
 
@@ -205,6 +220,11 @@ export class JsStoreParser {
 		for (const prop of node.properties) {
 			const key = this.getPropertyKey(prop);
 			if (!key) {
+				continue;
+			}
+
+			// Skip getters and setters in actions/callbacks
+			if (prop.type === 'ObjectMethod' && (prop.kind === 'get' || prop.kind === 'set')) {
 				continue;
 			}
 

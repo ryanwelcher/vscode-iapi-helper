@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Getters</title>
+</head>
+<body>
+    <!-- Test autocomplete for getter properties -->
+    <div data-wp-interactive="testGetters">
+        <!-- Type "state." below and check autocomplete suggestions -->
+        <!-- Expected: count, items, doubleCount, itemCount, isEmpty -->
+        <!-- Bug: Shows "get doubleCount" instead of just "doubleCount" -->
+        <span data-wp-text="state."></span>
+    </div>
+</body>
+</html>
