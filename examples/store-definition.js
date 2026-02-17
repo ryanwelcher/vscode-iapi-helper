@@ -33,7 +33,18 @@ store('myPlugin', {
 
         // Numbers
         currentIndex: 0,
-        total: 10
+        total: 10,
+
+        // Getters (computed properties) - shown without "get" keyword in autocomplete
+        get doubleCounter() {
+            const { state } = store('myPlugin');
+            return state.counter * 2;
+        },
+
+        get hasItems() {
+            const { state } = store('myPlugin');
+            return state.items.length > 0;
+        }
     },
 
     actions: {

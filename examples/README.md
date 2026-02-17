@@ -119,7 +119,13 @@ store('myPlugin', {
     state: {
         counter: 0,
         isOpen: false,
-        message: ''
+        message: '',
+
+        // Getters (computed properties)
+        get doubleCounter() {
+            const { state } = store('myPlugin');
+            return state.counter * 2;
+        }
     },
     actions: {
         toggle: () => {
@@ -136,6 +142,31 @@ store('myPlugin', {
     }
 });
 ```
+
+---
+
+### 5. `store-with-getters.js` & `test-getters.html`
+**Purpose:** Demonstrates getter (computed property) autocomplete support
+
+**Features tested:**
+- ✅ Getters appear as regular properties (without "get" keyword)
+- ✅ Getters marked with type "(computed)" for clarity
+- ✅ Getters mixed with regular properties work correctly
+
+**How to test:**
+1. Open `test-getters.html` in Extension Development Host
+2. Place cursor after `state.` in the `data-wp-text` attribute
+3. Press `Ctrl+Space` / `Cmd+Space` to trigger autocomplete
+4. Verify getters appear without "get" keyword prefix
+
+**Expected suggestions:**
+- `count` (number)
+- `items` (array)
+- `doubleCount` (computed) ✅
+- `itemCount` (computed) ✅
+- `isEmpty` (computed) ✅
+
+**Previously (bug):** Would show `get doubleCount`, `get itemCount`, etc. ❌
 
 ---
 
